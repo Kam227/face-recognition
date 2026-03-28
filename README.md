@@ -127,19 +127,3 @@ python run.py
 ```
 
 Pipeline visualizations for the first 5 images of each dataset are saved to `output/BioID/` and `output/LFW/`. A summary of how many images were processed and how many produced a successful segmentation is printed to the terminal.
-
----
-
-## File Structure
-
-```
-project/
-├── run.py                  # Entry point
-├── preprocessing.py        # Resize, grayscale, CLAHE, Gaussian filter
-├── segmentation.py         # K-means clustering + face crop
-├── feature_extraction.py   # HOG and LBP descriptors
-├── environment.yml         # Conda environment
-└── output/
-    ├── BioID/              # Pipeline figures for BioID images
-    └── LFW/                # Pipeline figures for LFW images
-```
