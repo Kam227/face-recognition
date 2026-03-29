@@ -1,4 +1,4 @@
-# CSE 40535 — Project 03: First Coding Update
+# CSE 40535 — Project 03
 ## Face Recognition Pipeline: Preprocessing, Segmentation, and Feature Extraction
 
 ---
