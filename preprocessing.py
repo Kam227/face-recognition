@@ -21,15 +21,15 @@ def load_image(path: str) -> np.ndarray | None:
 
 
 def preprocess(img_bgr: np.ndarray) -> dict:
-    resized   = cv2.resize(img_bgr, TARGET_SIZE, interpolation=cv2.INTER_AREA)
-    gray      = cv2.cvtColor(resized, cv2.COLOR_BGR2GRAY)
-    clahe     = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+    resized = cv2.resize(img_bgr, TARGET_SIZE, interpolation=cv2.INTER_AREA)
+    gray = cv2.cvtColor(resized, cv2.COLOR_BGR2GRAY)
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
     equalized = clahe.apply(gray)
-    denoised  = cv2.GaussianBlur(equalized, (3, 3), sigmaX=1.0)
+    denoised = cv2.GaussianBlur(equalized, (3, 3), sigmaX=1.0)
 
     return {
-        "resized":   resized,
-        "gray":      gray,
+        "resized": resized,
+        "gray": gray,
         "equalized": equalized,
-        "denoised":  denoised,
+        "denoised": denoised,
     }

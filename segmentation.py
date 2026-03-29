@@ -35,7 +35,7 @@ def segment(preprocessed: dict) -> dict:
 
     used_fallback = False
     if contours:
-        largest    = max(contours, key=cv2.contourArea)
+        largest = max(contours, key=cv2.contourArea)
         x, y, w, h = cv2.boundingRect(largest)
         if w < W * 0.2 or h < H * 0.2:
             used_fallback = True
@@ -46,18 +46,18 @@ def segment(preprocessed: dict) -> dict:
         w, h = int(W * 0.75), int(H * 0.75)
         x, y = (W - w) // 2, (H - h) // 2
 
-    face_crop         = gray[y : y + h, x : x + w]
+    face_crop = gray[y : y + h, x : x + w]
     face_crop_resized = cv2.resize(face_crop, (64, 64), interpolation=cv2.INTER_AREA)
-    cluster_vis        = np.zeros_like(gray)
-    step               = 255 // K
+    cluster_vis = np.zeros_like(gray)
+    step = 255 // K
     for i in range(K):
         cluster_vis[labels_2d == i] = step * (i + 1)
 
     return {
-        "mask":              mask,
-        "cluster_vis":       cluster_vis,
-        "primary_box":       (x, y, w, h),
-        "face_crop":         face_crop,
+        "mask": mask,
+        "cluster_vis": cluster_vis,
+        "primary_box": (x, y, w, h),
+        "face_crop": face_crop,
         "face_crop_resized": face_crop_resized,
-        "used_fallback":     used_fallback,
+        "used_fallback": used_fallback,
     }

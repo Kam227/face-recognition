@@ -22,11 +22,11 @@ def draw_boxes(img_bgr: np.ndarray, boxes: list[tuple]) -> np.ndarray:
 
 
 def save_pipeline_figure(
-    img_bgr:      np.ndarray,
+    img_bgr: np.ndarray,
     preprocessed: dict,
     segmentation: dict,
-    features:     dict,
-    save_path:    str | Path,
+    features: dict,
+    save_path: str | Path,
 ):
     fig, axes = plt.subplots(2, 4, figsize=(16, 8))
     fig.suptitle("Face Recognition Pipeline", fontsize=14, fontweight="bold")
@@ -44,7 +44,7 @@ def save_pipeline_figure(
     axes[0, 3].set_title("4. Denoised")
 
     annotated = draw_boxes(preprocessed["resized"], segmentation["boxes"])
-    label     = "Haar Cascade" + (" (fallback)" if segmentation["used_fallback"] else "")
+    label = "Haar Cascade" + (" (fallback)" if segmentation["used_fallback"] else "")
     axes[1, 0].imshow(cv2.cvtColor(annotated, cv2.COLOR_BGR2RGB))
     axes[1, 0].set_title(f"5. Segmentation\n{label}")
 
@@ -67,28 +67,28 @@ def save_pipeline_figure(
 
 
 def save_confusion_matrix(
-    y_test:      np.ndarray,
-    y_pred:      np.ndarray,
+    y_test: np.ndarray,
+    y_pred: np.ndarray,
     label_names: list[str] | None,
-    save_path:   str | Path,
+    save_path: str | Path,
     max_classes: int = 20,
 ):
     """Saves a confusion matrix.  Truncates to max_classes for readability."""
     unique = np.unique(np.concatenate([y_test, y_pred]))
     if len(unique) > max_classes:
         # Keep the max_classes most frequent test labels
-        counts   = {u: (y_test == u).sum() for u in unique}
-        top      = sorted(counts, key=counts.get, reverse=True)[:max_classes]
-        mask     = np.isin(y_test, top)
-        y_test   = y_test[mask]
-        y_pred   = y_pred[mask]
+        counts = {u: (y_test == u).sum() for u in unique}
+        top = sorted(counts, key=counts.get, reverse=True)[:max_classes]
+        mask = np.isin(y_test, top)
+        y_test = y_test[mask]
+        y_pred = y_pred[mask]
         if label_names:
             label_names = [label_names[i] for i in top]
 
-    cm      = confusion_matrix(y_test, y_pred)
-    fig_w   = max(8, len(np.unique(y_test)) * 0.6)
+    cm = confusion_matrix(y_test, y_pred)
+    fig_w = max(8, len(np.unique(y_test)) * 0.6)
     fig, ax = plt.subplots(figsize=(fig_w, fig_w * 0.85))
-    disp    = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=label_names)
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=label_names)
     disp.plot(ax=ax, xticks_rotation=45, colorbar=False)
     ax.set_title("Confusion Matrix")
     plt.tight_layout()

@@ -28,7 +28,7 @@ HOG_PARAMS = dict(
 
 LBP_RADIUS = 1
 LBP_POINTS = 8 * LBP_RADIUS
-LBP_BINS   = LBP_POINTS + 2   # number of uniform LBP patterns
+LBP_BINS = LBP_POINTS + 2   # number of uniform LBP patterns
 
 
 def extract_features(face_crop_64: np.ndarray) -> dict:
@@ -40,15 +40,15 @@ def extract_features(face_crop_64: np.ndarray) -> dict:
     hog_vector, hog_image = hog(face_crop_64, **HOG_PARAMS)
 
     # LBP
-    lbp_map  = local_binary_pattern(face_crop_64, LBP_POINTS, LBP_RADIUS, method="uniform")
+    lbp_map = local_binary_pattern(face_crop_64, LBP_POINTS, LBP_RADIUS, method="uniform")
     lbp_hist, _ = np.histogram(
         lbp_map.ravel(), bins=LBP_BINS, range=(0, LBP_BINS), density=True
     )
 
     return {
         "hog_vector": hog_vector,
-        "hog_image":  hog_image,
+        "hog_image": hog_image,
         "lbp_vector": lbp_hist,
-        "lbp_map":    lbp_map,
+        "lbp_map": lbp_map,
         "descriptor": np.concatenate([hog_vector, lbp_hist]),
     }

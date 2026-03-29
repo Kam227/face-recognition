@@ -27,13 +27,13 @@ from segmentation import segment
 from feature_extraction import extract_features
 
 BIOID_DIR = "/Users/kam/Desktop/CV/BioID-FaceDatabase-V1.2"
-LFW_DIR   = "/Users/kam/Desktop/CV/archive (5)/lfw_funneled"
+LFW_DIR = "/Users/kam/Desktop/CV/archive (5)/lfw_funneled"
 
-OUTPUT_DIR      = Path("output")
-MAX_VIZ_IMAGES  = 5 # how many pipeline figures to save per dataset
+OUTPUT_DIR = Path("output")
+MAX_VIZ_IMAGES = 5 # how many pipeline figures to save per dataset
 
 def find_images(directory: str, extensions=("*.pgm", "*.jpg", "*.jpeg", "*.png")) -> list[Path]:
-    root   = Path(directory)
+    root = Path(directory)
     images = []
     for ext in extensions:
         images.extend(root.rglob(ext))
@@ -94,10 +94,10 @@ def process_dataset(name: str, directory: str):
     viz_dir = OUTPUT_DIR / name
     viz_dir.mkdir(parents=True, exist_ok=True)
 
-    n_success      = 0
-    n_fallback     = 0
-    n_fail         = 0
-    viz_saved      = 0
+    n_success = 0
+    n_fallback = 0
+    n_fail = 0
+    viz_saved = 0
 
     for i, img_path in enumerate(images):
         img = load_image(str(img_path))
@@ -105,8 +105,8 @@ def process_dataset(name: str, directory: str):
             n_fail += 1
             continue
 
-        pre  = preprocess(img)
-        seg  = segment(pre)
+        pre = preprocess(img)
+        seg = segment(pre)
         feat = extract_features(seg["face_crop_resized"])
 
         if seg["used_fallback"]:
@@ -138,5 +138,5 @@ def process_dataset(name: str, directory: str):
 if __name__ == "__main__":
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     process_dataset("BioID", BIOID_DIR)
-    process_dataset("LFW",   LFW_DIR)
+    process_dataset("LFW", LFW_DIR)
     print(f"\nDone. All output saved to: {OUTPUT_DIR}/\n")
