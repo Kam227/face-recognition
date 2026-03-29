@@ -28,8 +28,8 @@ def preprocess(img_bgr: np.ndarray) -> dict:
     denoised  = cv2.GaussianBlur(equalized, (3, 3), sigmaX=1.0)
 
     return {
-        "resized":   resized,   # colour, 128x128
-        "gray":      gray,      # grayscale, before equalization
-        "equalized": equalized, # after CLAHE
-        "denoised":  denoised,  # final preprocessed image
+        "resized":   resized,
+        "gray":      gray,
+        "equalized": equalized,
+        "denoised":  denoised,
     }

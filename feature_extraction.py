@@ -46,9 +46,9 @@ def extract_features(face_crop_64: np.ndarray) -> dict:
     )
 
     return {
-        "hog_vector": hog_vector,   # 1764-dim
-        "hog_image":  hog_image,    # for visualisation
-        "lbp_vector": lbp_hist,     # 10-dim
-        "lbp_map":    lbp_map,      # for visualisation
-        "descriptor": np.concatenate([hog_vector, lbp_hist]),  # combined
+        "hog_vector": hog_vector,
+        "hog_image":  hog_image,
+        "lbp_vector": lbp_hist,
+        "lbp_map":    lbp_map,
+        "descriptor": np.concatenate([hog_vector, lbp_hist]),
     }

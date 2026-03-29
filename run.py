@@ -26,16 +26,11 @@ from preprocessing import load_image, preprocess
 from segmentation import segment
 from feature_extraction import extract_features
 
-# ── SET YOUR DATASET PATHS HERE ───────────────────────────────────────────────
-BIOID_DIR = "/Users/kam/Desktop/CV/BioID-FaceDatabase-V1.2"   # folder containing BioID_0000.pgm etc.
-LFW_DIR   = "/Users/kam/Desktop/CV/archive (5)/lfw_funneled"         # folder containing per-person subfolders
-# ─────────────────────────────────────────────────────────────────────────────
+BIOID_DIR = "/Users/kam/Desktop/CV/BioID-FaceDatabase-V1.2"
+LFW_DIR   = "/Users/kam/Desktop/CV/archive (5)/lfw_funneled"
 
 OUTPUT_DIR      = Path("output")
-MAX_VIZ_IMAGES  = 5   # how many pipeline figures to save per dataset
-
-
-# ── Dataset discovery ─────────────────────────────────────────────────────────
+MAX_VIZ_IMAGES  = 5 # how many pipeline figures to save per dataset
 
 def find_images(directory: str, extensions=("*.pgm", "*.jpg", "*.jpeg", "*.png")) -> list[Path]:
     root   = Path(directory)
@@ -44,14 +39,11 @@ def find_images(directory: str, extensions=("*.pgm", "*.jpg", "*.jpeg", "*.png")
         images.extend(root.rglob(ext))
     return sorted(images)
 
-
-# ── Visualisation ─────────────────────────────────────────────────────────────
-
 def save_pipeline_figure(img_bgr, preprocessed, segmentation, features, save_path):
     fig, axes = plt.subplots(2, 4, figsize=(16, 8))
     fig.suptitle(f"Pipeline: {save_path.stem}", fontsize=13, fontweight="bold")
 
-    # Row 1 — preprocessing
+    # preprocessing
     axes[0, 0].imshow(cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB))
     axes[0, 0].set_title("1. Original Image")
 
@@ -64,7 +56,7 @@ def save_pipeline_figure(img_bgr, preprocessed, segmentation, features, save_pat
     axes[0, 3].imshow(preprocessed["denoised"], cmap="gray")
     axes[0, 3].set_title("4. Gaussian Filter\n(Denoising)")
 
-    # Row 2 — segmentation + features
+    # segmentation + features
     fallback_note = " (centre crop fallback)" if segmentation["used_fallback"] else ""
     axes[1, 0].imshow(segmentation["cluster_vis"], cmap="gray")
     axes[1, 0].set_title(f"5. K-means Clustering\n(k=3{fallback_note})")
@@ -84,9 +76,6 @@ def save_pipeline_figure(img_bgr, preprocessed, segmentation, features, save_pat
     plt.tight_layout()
     plt.savefig(save_path, dpi=120, bbox_inches="tight")
     plt.close(fig)
-
-
-# ── Per-dataset pipeline ──────────────────────────────────────────────────────
 
 def process_dataset(name: str, directory: str):
     print(f"\n{'='*60}")
@@ -130,7 +119,6 @@ def process_dataset(name: str, directory: str):
               f"| HOG: {len(feat['hog_vector'])}d  LBP: {len(feat['lbp_vector'])}d  "
               f"| {detection_str}")
 
-        # Save visualisation for first MAX_VIZ_IMAGES images
         if viz_saved < MAX_VIZ_IMAGES:
             save_pipeline_figure(
                 img, pre, seg, feat,
@@ -146,9 +134,6 @@ def process_dataset(name: str, directory: str):
     print(f"  Used centre crop fallback : {n_fallback}")
     print(f"  Failed to load            : {n_fail}")
     print(f"  Visualisations saved      : {viz_saved}  →  {viz_dir}/")
-
-
-# ── Entry point ───────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
