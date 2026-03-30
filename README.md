@@ -123,7 +123,7 @@ LFW_DIR   = "/path/to/lfw_funneled"
 ### Run
 
 ```bash
-python run.py
+python3 run.py
 ```
 
 Pipeline visualizations for the first 5 images of each dataset are saved to `output/BioID/` and `output/LFW/`. A summary of how many images were processed and how many produced a successful segmentation is printed to the terminal.
