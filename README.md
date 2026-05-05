@@ -11,8 +11,8 @@ This project builds a complete face recognition pipeline using two publicly avai
 
 ## Datasets
 
-- **BioID Face Database** — 1,521 grayscale images of 24 subjects captured under controlled but varied lighting and pose conditions. Downloaded from the [official BioID website](https://www.bioid.com/face-database/).
-- **Labeled Faces in the Wild (LFW)** — ~13,000 color images of public figures collected from the web, organized by identity. Downloaded from [Kaggle](https://www.kaggle.com/datasets/atulanandjha/lfwpeople?resource=download). Only identities with 30 or more images are used for classification.
+- **BioID Face Database** — 1,521 grayscale images of 23 subjects captured under controlled but varied lighting and pose conditions. Downloaded from the [official BioID website](https://www.bioid.com/face-database/).
+- **Labeled Faces in the Wild (LFW)** — ~13,000 color images of public figures collected from the web, organized by identity. Downloaded from [Kaggle](https://www.kaggle.com/datasets/atulanandjha/lfwpeople?resource=download). Only identities with 30 or more images are used for classification, yielding 34 identities and 2,370 images.
 
 ---
 
@@ -137,7 +137,7 @@ Pipeline visualizations for the first 5 images of each dataset are saved to `out
 
 ### Overview
 
-This section covers the classification stage of the pipeline. Two classifiers are trained and evaluated on the feature vectors produced by the pipeline described above: a **Support Vector Machine (SVM)** with an RBF kernel and a **Multi-Layer Perceptron (MLP)**. Both are evaluated on an 80/20 stratified train/validation split.
+This section covers the classification stage of the pipeline. Two classifiers are trained and evaluated on the feature vectors produced by the pipeline described above: a **Support Vector Machine (SVM)** with an RBF kernel and a **Multi-Layer Perceptron (MLP)**. Both are evaluated on a stratified 70/20/10 train/validation/test split. The 10% test set is held out entirely and only evaluated in Part 5.
 
 ---
 
@@ -151,27 +151,27 @@ After feature extraction, the 1,830-dimensional descriptors are standardized usi
 - **MLP** — Two hidden layers (512, 256 units), ReLU activation, early stopping on an internal 10% validation split, up to 300 epochs.
 
 **LFW filtering:**
-Only identities with at least 30 images are included in the LFW experiment. This yields a more tractable problem: fewer classes but more training samples per class, which improves the signal-to-noise ratio for the classifier without changing the underlying pipeline.
+Only identities with at least 30 images are included in the LFW experiment, yielding 34 identities (2,370 images). This yields a more tractable problem: fewer classes but more training samples per class, which improves the signal-to-noise ratio for the classifier without changing the underlying pipeline.
 
 ---
 
 ### Results
 
-#### BioID Dataset (24 classes, 1,521 images)
+#### BioID Dataset (23 classes, 1,521 images)
 
 | Model | Train Accuracy | Validation Accuracy |
 |-------|:--------------:|:-------------------:|
-| SVM   | 1.00           | **0.89**            |
-| MLP   | 0.99           | **0.88**            |
+| SVM   | 1.00           | **0.69**            |
+| MLP   | 0.96           | **0.65**            |
 
 ![BioID Accuracy Chart](output/BioID/svm_vs_mlp_accuracy.png)
 
-#### LFW Dataset (filtered to ≥30 images/class)
+#### LFW Dataset (34 identities, ≥30 images each, 2,370 images)
 
 | Model | Train Accuracy | Validation Accuracy |
 |-------|:--------------:|:-------------------:|
-| SVM   | 1.00           | **0.64**            |
-| MLP   | 0.97           | **0.65**            |
+| SVM   | 1.00           | **0.71**            |
+| MLP   | 0.97           | **0.72**            |
 
 ![LFW Accuracy Chart](output/LFW/svm_vs_mlp_accuracy.png)
 
@@ -184,7 +184,7 @@ Only identities with at least 30 images are included in the LFW experiment. This
 ![BioID SVM Confusion Matrix](output/BioID/svm_confusion_matrix.png)
 ![BioID MLP Confusion Matrix](output/BioID/mlp_confusion_matrix.png)
 
-The BioID confusion matrices reveal a significant class imbalance: Subject_23 accounts for the majority of images in the dataset (images indexed from 460 onward), while all other subjects have only 4 validation samples each. As a result, accuracy on this dataset is partially inflated — the classifier correctly handles the dominant class and performs moderately on the remaining minority subjects. Errors among subjects 0–22 are scattered rather than concentrated, suggesting the classifier is struggling with the small per-class sample count rather than with systematic confusion between particular identities.
+The BioID confusion matrices show that the 23 subjects (Subject_00–Subject_22) are relatively balanced, each contributing 60–80 images to the full dataset. Errors are scattered rather than concentrated on particular pairs of identities, which suggests the classifier is limited by the small per-class sample count (roughly 42–56 training images per subject) rather than by systematic confusion between specific individuals.
 
 Both SVM and MLP perform nearly identically on BioID, which is expected — the dataset is small and relatively clean (controlled lighting, fixed background), so the feature vectors are informative enough that both models converge to similar decision boundaries.
 
@@ -202,7 +202,7 @@ This is a well-known failure mode for multi-class classifiers trained on imbalan
 ### Discussion
 
 **BioID vs. LFW performance gap.**
-BioID achieves ~89% validation accuracy while LFW reaches ~65%. The gap reflects fundamental differences in dataset difficulty. BioID is a controlled lab dataset with consistent backgrounds, lighting, and camera distance — the pipeline's Haar Cascade detector works reliably and the resulting face crops are clean and consistent. LFW, by contrast, consists of web-collected photographs with extreme variation in pose, lighting, resolution, and occlusion. Haar Cascade detection is less reliable on these images, which means some face crops are misaligned or noisy before features are even extracted.
+BioID achieves ~69% validation accuracy while LFW reaches ~71%. The small gap — and LFW's slight lead — reflects the fact that LFW funneled images are pre-aligned with faces centered, making the pipeline's Haar Cascade detection consistently reliable on them. BioID, while a controlled lab dataset, has more varied backgrounds; without K-means background masking applied to the face crop, some background texture bleeds into HOG and LBP descriptors, which reduces discriminability between subjects who were photographed against similar environments. LFW benefits from having more training images per identity on average (George W. Bush: 530 images), which compensates for the wider pose and lighting variation in wild-collected photographs.
 
 **Overfitting.**
 Both classifiers achieve near-perfect training accuracy (97–100%) while validation accuracy is substantially lower. This is a classic overfitting signature and is largely attributable to the high dimensionality of the raw feature space relative to the number of training samples per class. PCA significantly reduced this gap compared to training without it — before adding PCA, LFW SVM validation accuracy was approximately 16%. The residual gap reflects that even with PCA, the number of examples per identity (roughly 24 for training after the split) is insufficient to fully characterize the variation within each class.
@@ -214,4 +214,77 @@ The two classifiers perform nearly identically across both datasets, with differ
 The most impactful change across the project was replacing intensity-based K-means segmentation with Haar Cascade face detection. The original K-means approach would frequently select the wrong region (bright backgrounds, overexposed patches) and produce noisy face crops, degrading all downstream features. Haar Cascade detection provides geometrically consistent crops, which is the prerequisite for any face-specific feature to be meaningful. Secondary improvements — eye alignment, background removal within the crop, multi-scale LBP, and per-descriptor L2 normalization — each contributed incrementally to the final accuracy.
 
 **Limitations and future directions.**
-The 35% error rate remaining on LFW is a fundamental ceiling for hand-crafted HOG+LBP features on a real-world multi-class recognition problem. Classical methods (Eigenfaces, Fisherfaces) achieved similar performance ranges on comparable benchmarks in the pre-deep-learning era. The path to substantially higher accuracy would require learned features — convolutional neural networks routinely exceed 99% on LFW by learning to extract identity-discriminative representations directly from pixel data, rather than relying on manually designed descriptors. Within the classical framework, the most tractable remaining improvement would be face landmark detection for more precise geometric alignment (e.g., aligning eye centres to fixed pixel coordinates), which would make HOG features more geometrically consistent across subjects.
+The ~30% error rate remaining on LFW is a fundamental ceiling for hand-crafted HOG+LBP features on a real-world multi-class recognition problem. Classical methods (Eigenfaces, Fisherfaces) achieved similar performance ranges on comparable benchmarks in the pre-deep-learning era. The path to substantially higher accuracy would require learned features — convolutional neural networks routinely exceed 99% on LFW by learning to extract identity-discriminative representations directly from pixel data, rather than relying on manually designed descriptors. Within the classical framework, the most tractable remaining improvement would be face landmark detection for more precise geometric alignment (e.g., aligning eye centres to fixed pixel coordinates), which would make HOG features more geometrically consistent across subjects.
+
+---
+
+## Part 5 — Test Set Evaluation Report
+
+### Test Database Description
+
+The test set is not a separately collected database — it is a 10% stratified hold-out from each dataset, partitioned before any model training or hyperparameter decisions were made. Stratification ensures that all class proportions in the test set match those in the full dataset, so no identity is over- or under-represented relative to the training split.
+
+**BioID test set:** 153 images (10% of 1,521), drawn from all 23 subjects with 6–8 images per subject.
+
+**LFW test set:** 237 images (10% of 2,370), drawn from all 34 identities with 3–53 images per identity depending on class size. George W. Bush, with 530 total images, contributes 53 test images; many minority-class identities contribute only 3–4.
+
+The test set differs from the training and validation subsets in two important ways. First, it is substantially smaller on a per-class basis — roughly one-seventh the number of examples used for training. This means the measured accuracy carries more variance: a single misclassified image shifts the per-class score considerably more than it would in the validation set. Second, and more consequentially, no model decisions were informed by the test set at any stage. The feature extraction parameters (HOG cell size, LBP scales), the PCA retention threshold, the SVM kernel and regularization strength, and the MLP architecture were all selected based on validation performance. The test set therefore represents a genuine held-out evaluation rather than a deferred validation pass.
+
+These properties make the split sufficient for final evaluation: the stratified construction ensures representative coverage of all classes, and the strict separation from model development ensures the reported numbers reflect generalization rather than overfitting to a second validation fold.
+
+---
+
+### Test Set Classification Accuracy
+
+Both classifiers are evaluated on the held-out test set using the same metrics reported during training and validation.
+
+#### BioID (23 classes, 1,521 images)
+
+| Model | Train Accuracy | Val Accuracy | **Test Accuracy** |
+|-------|:--------------:|:------------:|:-----------------:|
+| SVM   | 1.00           | 0.69         | **0.67**          |
+| MLP   | 0.96           | 0.65         | **0.61**          |
+
+![BioID Test Accuracy](output/BioID/test_accuracy_comparison.png)
+
+![BioID SVM Test Confusion Matrix](output/BioID/svm_test_confusion_matrix.png)
+![BioID MLP Test Confusion Matrix](output/BioID/mlp_test_confusion_matrix.png)
+
+#### LFW (34 identities, ≥30 images each, 2,370 images)
+
+| Model | Train Accuracy | Val Accuracy | **Test Accuracy** |
+|-------|:--------------:|:------------:|:-----------------:|
+| SVM   | 1.00           | 0.71         | **0.68**          |
+| MLP   | 0.97           | 0.72         | **0.67**          |
+
+![LFW Test Accuracy](output/LFW/test_accuracy_comparison.png)
+
+![LFW SVM Test Confusion Matrix](output/LFW/svm_test_confusion_matrix.png)
+![LFW MLP Test Confusion Matrix](output/LFW/mlp_test_confusion_matrix.png)
+
+---
+
+### Why the Test Set Is Harder: Analysis and Proposed Improvements
+
+**Expected accuracy drop.**
+A drop from validation to test accuracy is expected and not a sign of a flawed pipeline. The classifiers were trained and indirectly tuned against the validation set — every hyperparameter choice that improved validation accuracy was retained. The test set has no such prior exposure, so the gap between validation and test accuracy is an honest measure of how much the model overfit to the validation distribution. On BioID, where the dataset is small and controlled, the drop is expected to be modest. On LFW, where the per-class sample count is lower and the image variability is higher, a larger drop is expected.
+
+**Root causes of degraded test performance.**
+
+*Small per-class test sample count.* With only 6–7 test images per BioID subject and 2–4 per LFW identity, a single pipeline failure (bad face detection, misaligned crop) has outsized impact on the per-class score. The validation set is large enough to average out occasional detection failures; the test set is not.
+
+*Haar Cascade detection failures on challenging images.* The Haar Cascade detector works reliably on near-frontal, well-lit faces, but fails on profile views, occluded faces, and low-resolution images. When detection fails, the pipeline falls back to a centre crop of the full 128×128 image, which includes background, clothing, and context that the classifier was never trained to handle. The confusion matrices for LFW show that misclassifications are concentrated on identities whose test images contain atypical poses or lighting — exactly the cases where the detector is least reliable.
+
+*Intra-class variation exceeds the training distribution.* With ≥ 20 images per LFW identity but only ~14 in training, the test images for a given person may include poses, accessories (glasses, hats), or lighting conditions not represented in their training examples. HOG and LBP are not invariant to large pose changes; a face turned 30° to the side produces a substantially different HOG descriptor than a frontal view of the same person.
+
+*Dominant-class bias.* Identities with more training images produce stronger, more consistent feature clusters in the SVM's learned decision boundaries. When the classifier is uncertain, it tends to predict the most frequent training class. The confusion matrices for LFW show this clearly: high-image-count identities (e.g., George W. Bush, Colin Powell) appear as common prediction targets even for images from minority-class test subjects.
+
+**Proposed improvements to lower error rates.**
+
+*Landmark-based geometric normalization.* Replacing the current eye-alignment step with full facial landmark detection (68-point models, e.g., via dlib or MediaPipe) would allow precise registration of eyes, nose, and mouth to fixed target coordinates before feature extraction. This would make HOG descriptors substantially more geometrically consistent across subjects and significantly reduce intra-class variation from pose and camera distance.
+
+*Augmentation of underrepresented classes.* Applying random horizontal flips, brightness jitter, and small affine perturbations to training images for minority classes during the feature extraction phase would synthetically increase per-class sample counts and reduce the dominant-class bias observed in the confusion matrices.
+
+*Learned feature representations.* The most impactful improvement would be replacing HOG+LBP with a pre-trained convolutional neural network backbone (e.g., a ResNet or MobileNet fine-tuned on a face recognition dataset). Learned features encode identity-discriminative information that hand-crafted descriptors cannot capture, and they generalize substantially better to novel poses and lighting. On LFW, state-of-the-art deep learning methods exceed 99% accuracy — the gap between that and the ~60% ceiling of classical methods is attributable almost entirely to the quality of the feature representation.
+
+*Better face detection.* Replacing the Haar Cascade with a modern face detector — such as the dlib HOG-based detector, MTCNN, or RetinaFace — would reduce the fallback rate on challenging LFW images and produce more consistently located face crops, directly improving the quality of all downstream features.

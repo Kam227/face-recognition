@@ -2,10 +2,10 @@
 segmentation.py
 Face detection and segmentation pipeline:
 
-  1. Haar Cascade face detection  — locates the face bounding box
-  2. Eye detection + alignment    — rotates so the eyes are level
-  3. K-means background removal   — zeros out non-face pixels within the crop
-  4. Centre-crop fallback         — used if no face is detected
+  1. Haar Cascade face detection — locates the face bounding box
+  2. Eye detection + alignment — rotates so the eyes are level
+  3. K-means background removal — zeros out non-face pixels within the crop
+  4. Centre-crop fallback — used if no face is detected
 """
 
 import cv2
@@ -22,7 +22,6 @@ _face_cascade = cv2.CascadeClassifier(
 _eye_cascade = cv2.CascadeClassifier(
     cv2.data.haarcascades + "haarcascade_eye.xml"
 )
-
 
 def _align_eyes(gray_crop: np.ndarray, color_crop: np.ndarray):
     """Rotate the face crop so detected eyes are level. Returns (gray, color)."""
@@ -97,10 +96,11 @@ def segment(preprocessed: dict) -> dict:
     if not used_fallback:
         face_gray, face_color = _align_eyes(face_gray, face_color)
 
-    # 3. K-means background removal
-    face_gray, face_color, fg_mask = _remove_background(face_gray, face_color)
+    # 3. K-means background removal (mask kept for visualization only;
+    #    applying it to pre-aligned crops removes discriminative face pixels)
+    _, _, fg_mask = _remove_background(face_gray, face_color)
 
-    # 4. Resize to 64×64
+    # 4. Resize to 64×64 (unmasked crops preserve full facial detail)
     face_crop_resized = cv2.resize(face_gray,  (64, 64), interpolation=cv2.INTER_AREA)
     face_crop_resized_color = cv2.resize(face_color, (64, 64), interpolation=cv2.INTER_AREA)
 
