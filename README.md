@@ -119,17 +119,28 @@ BIOID_DIR = "/path/to/BioID_database"
 LFW_DIR   = "/path/to/lfw_funneled"
 ```
 
-### Run
+### Modes
+
+The program has four modes, all run via `run.py`:
 
 ```bash
-# Pipeline visualizations only
+# 1. Run the full preprocessing + segmentation + feature extraction pipeline
+#    Saves visualization figures for the first 5 images of each dataset
 python run.py pipeline
 
-# Train and evaluate classifiers
+# 2. Train SVM and MLP classifiers and evaluate on the validation set
+#    Saves models, confusion matrices, and accuracy charts to output/
 python run.py train
+
+# 3. Evaluate trained models on the held-out test set (run after train)
+python run.py test
+
+# 4. Pick a random test image and show the prediction
+python run.py demo bioid
+python run.py demo lfw
 ```
 
-Pipeline visualizations for the first 5 images of each dataset are saved to `output/BioID/` and `output/LFW/`. Classification results, confusion matrices, and saved models are written to the same directories.
+All output is written to `output/BioID/` and `output/LFW/`. The `test` and `demo` modes require trained models — run `train` first.
 
 ---
 
